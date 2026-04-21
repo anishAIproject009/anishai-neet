@@ -472,8 +472,11 @@ footer b{color:var(--bl1);}
         <button class="act-btn act-reveal"  id="reveal-btn"  onclick="revealFull()" style="display:none">Show Full Solution →</button>
         <button class="act-btn act-similar" id="similar-btn" onclick="getSimilar()">🔁 Similar Questions</button>
         <button class="act-btn act-theory"  onclick="askTheoryFromSolve()">📚 Explain Theory</button>
+        <button class="act-btn act-diagram" id="diagram-btn" onclick="fetchDiagram()">📐 Show Diagram</button>
       </div>
     </div>
+
+    <div id="diagram-wrap" style="display:none;margin:12px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(0,150,200,0.2);background:#fff"><div id="diagram-container" style="width:100%;line-height:0"></div></div>
 
     <div id="followup-section">
       <label>ASK A FOLLOW-UP <span class="fu-count" id="fu-count"></span></label>
@@ -695,7 +698,36 @@ async function revealFull(){document.getElementById('reveal-btn').style.display=
 function updateFU(){document.getElementById('fu-count').textContent=`${followupCount}/3 used`;document.getElementById('followup-btn').disabled=followupCount>=3;if(followupCount>=3)document.getElementById('followup-text').placeholder='Max 3 follow-ups reached. Ask a new question.';}
 async function sendFollowup(){const text=document.getElementById('followup-text').value.trim();if(!text||followupCount>=3)return;document.getElementById('followup-btn').disabled=true;document.getElementById('loader').style.display='block';try{const r=await apiFetch('/api/solve',{app:APP,subject:currentSub,mode:'full',imageBase64,imageType,extraText:'FOLLOW-UP: '+text,sessionId});followupCount++;updateFU();document.getElementById('followup-text').value='';showResult(r.answer,'full',currentSub);}catch(err){if(err.code==='followup_exhausted')alert('Max 3 follow-ups reached.');else alert('Error: '+err.message);}document.getElementById('loader').style.display='none';document.getElementById('followup-btn').disabled=false;}
 
-async function getSimilar(){
+async async function fetchDiagram() {
+    const btn = document.getElementById('diagram-btn');
+    const wrap = document.getElementById('diagram-wrap');
+    const container = document.getElementById('diagram-container');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+    try {
+      const solution = document.getElementById('result-body').innerText || '';
+      const r = await fetch(API + '/api/diagram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ subject: currentSub, question: savedQ || '', solution: solution, sessionId: sessionId })
+      });
+      const d = await r.json();
+      if (d.svg && d.svg.length > 50) {
+        container.innerHTML = d.svg;
+        const svgEl = container.querySelector('svg');
+        if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = 'auto'; }
+        wrap.style.display = 'block';
+        btn.textContent = '📐 Diagram ✓';
+      } else {
+        btn.textContent = '📐 No diagram';
+      }
+    } catch(e) {
+      btn.textContent = '📐 Failed – retry';
+    }
+    btn.disabled = false;
+  }
+
+  function getSimilar(){
   document.getElementById('similar-card').style.display='none';document.getElementById('loader').style.display='block';document.getElementById('similar-btn').disabled=true;
   try{const r=await apiFetch('/api/similar',{app:APP,subject:currentSub,imageBase64,imageType,extraText:document.getElementById('q-text').value.trim()});
     const lines=r.questions.split('\n').map(l=>l.trim()).filter(Boolean);let qs=[],cur='';
