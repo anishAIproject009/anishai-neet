@@ -605,7 +605,7 @@ async function refreshStatus(){
     isPaid=r.isPaid;const qd=document.getElementById('quota-display');
     if(!r.isPaid){const l=Math.max(0,r.freeLimit-r.freeUsed);qd.textContent=`${l} free left`;qd.className='quota-pill'+(l<=1?' low':'');}
     else{const l=Math.max(0,r.dailyLimit-r.dailyUsed);qd.textContent=`${l}/12 today`;qd.className='quota-pill paid'+(l<=2?' low':'');}
-  }catch(e){}
+  }catch(e){token=null;userId=null;localStorage.clear();showPage('login-page');}
 }
 function switchTab(tab){document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='solver')||(i===1&&tab==='theory')));document.getElementById('solver-tab').style.display=tab==='solver'?'block':'none';document.getElementById('theory-tab').style.display=tab==='theory'?'block':'none';}
 function setSub(el,cls){document.querySelectorAll('.subj-btn').forEach(b=>b.className='subj-btn');el.classList.add('a'+cls);currentSub=el.dataset.sub;}
@@ -753,7 +753,7 @@ async function fetchTheory(topic){
 
 async function subscribe(){try{const r=await apiFetch('/api/subscribe',{app:APP,phone:userPhone});const rzp=new Razorpay({key:r.razorpayKeyId,subscription_id:r.subscriptionId,name:'ANISH.AI NEET',description:'12 questions/day · ₹299/month',prefill:{contact:userPhone},theme:{color:'#4aa8d8'},handler:async()=>{await refreshStatus();alert('✅ Subscribed! 12 questions/day unlocked. Resets at 5:00 AM daily.');document.getElementById('sub-banner').style.display='none';}});rzp.open();}catch(e){alert('Payment error. Try again.');}}
 
-async function apiFetch(path,body,auth=true,method='POST'){const headers={'Content-Type':'application/json'};if(auth&&token)headers['Authorization']='Bearer '+token;const opts={method,headers};if(method!=='GET'&&body)opts.body=JSON.stringify(body);const res=await fetch(API+path,opts);const data=await res.json();if(!res.ok){const err=new Error(data.message||data.error||'Failed');err.code=data.error;throw err;}return data;}
+async function apiFetch(path,body,auth=true,method='POST'){const headers={'Content-Type':'application/json'};if(auth&&token)headers['Authorization']='Bearer '+token;const opts={method,headers};if(method!=='GET'&&body)opts.body=JSON.stringify(body);const res=await fetch(API+path,opts);const data=await res.json();if(res.status===401){token=null;userId=null;localStorage.clear();showPage('login-page');throw new Error('Session expired');}if(!res.ok){const err=new Error(data.message||data.error||'Failed');err.code=data.error;throw err;}return data;}
 </script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
