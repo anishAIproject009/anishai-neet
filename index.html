@@ -700,7 +700,7 @@ async function revealFull(){document.getElementById('reveal-btn').style.display=
 function updateFU(){document.getElementById('fu-count').textContent=`${followupCount}/3 used`;document.getElementById('followup-btn').disabled=followupCount>=3;if(followupCount>=3)document.getElementById('followup-text').placeholder='Max 3 follow-ups reached. Ask a new question.';}
 async function sendFollowup(){const text=document.getElementById('followup-text').value.trim();if(!text||followupCount>=3)return;document.getElementById('followup-btn').disabled=true;document.getElementById('loader').style.display='block';try{const r=await apiFetch('/api/solve',{app:APP,subject:currentSub,mode:'full',imageBase64,imageType,extraText:'FOLLOW-UP: '+text,sessionId});followupCount++;updateFU();document.getElementById('followup-text').value='';showResult(r.answer,'full',currentSub);}catch(err){if(err.code==='followup_exhausted')alert('Max 3 follow-ups reached.');else alert('Error: '+err.message);}document.getElementById('loader').style.display='none';document.getElementById('followup-btn').disabled=false;}
 
-async async function fetchDiagram() {
+async function fetchDiagram() {
     const btn = document.getElementById('diagram-btn');
     const wrap = document.getElementById('diagram-wrap');
     const container = document.getElementById('diagram-container');
