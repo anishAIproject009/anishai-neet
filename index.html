@@ -576,7 +576,7 @@ window.onload=()=>{
 
 function showPage(id){document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='none';});const el=document.getElementById(id);el.style.display='flex';el.classList.add('active');}
 function showLogin(){showPage('login-page');}
-function showPhoneStep(){document.getElementById('phone-step').style.display='block';document.getElementById('otp-step').style.display='none';setMsg('');}
+async function showPhoneStep(){document.getElementById('phone-step').style.display='block';document.getElementById('otp-step').style.display='none';setMsg('');}
 function setMsg(m,c='var(--muted)'){const e=document.getElementById('login-msg');e.textContent=m;e.style.color=c;}
 
 async function sendOTP(){
@@ -598,7 +598,7 @@ async function verifyOTP(){
     else setMsg(r.error||'Invalid OTP.','var(--err)');
   }catch(e){setMsg('Network error.','var(--err)');}
 }
-function logout(){['neet_token','neet_userId','neet_phone'].forEach(k=>localStorage.removeItem(k));token=null;userId=null;userPhone=null;document.getElementById('main-header').style.display='none';showPage('welcome-page');}
+async function logout(){['neet_token','neet_userId','neet_phone'].forEach(k=>localStorage.removeItem(k));token=null;userId=null;userPhone=null;document.getElementById('main-header').style.display='none';showPage('welcome-page');}
 async function showApp(){showPage('app-page');document.getElementById('main-header').style.display='flex';document.getElementById('app-page').style.display='block';if(userPhone)document.getElementById('user-phone').textContent='📱 '+userPhone;await refreshStatus();}
 async function refreshStatus(){
   try{const r=await apiFetch('/api/status?app=neet',null,true,'GET');
@@ -694,7 +694,7 @@ function showPopup(term,def,formula,exam){
   const popup=document.getElementById('kw-popup');popup.style.top='50%';popup.style.left='50%';popup.style.transform='translate(-50%,-50%)';
   popup.classList.add('show');document.getElementById('kw-overlay').classList.add('show');
 }
-function closePopup(){document.getElementById('kw-popup').classList.remove('show');document.getElementById('kw-overlay').classList.remove('show');}
+async function closePopup(){document.getElementById('kw-popup').classList.remove('show');document.getElementById('kw-overlay').classList.remove('show');}
 
 async function revealFull(){document.getElementById('reveal-btn').style.display='none';document.getElementById('loader').style.display='block';document.getElementById('solve-btn').disabled=true;try{const r=await apiFetch('/api/solve',{app:APP,subject:currentSub,mode:'full',imageBase64,imageType,extraText:document.getElementById('q-text').value.trim(),sessionId});showResult(r.answer,'full',currentSub);}catch(e){alert('Error: '+e.message);}document.getElementById('loader').style.display='none';document.getElementById('solve-btn').disabled=false;}
 function updateFU(){document.getElementById('fu-count').textContent=`${followupCount}/3 used`;document.getElementById('followup-btn').disabled=followupCount>=3;if(followupCount>=3)document.getElementById('followup-text').placeholder='Max 3 follow-ups reached. Ask a new question.';}
@@ -729,7 +729,7 @@ async function fetchDiagram() {
     btn.disabled = false;
   }
 
-  function getSimilar(){
+  async function getSimilar(){
   document.getElementById('similar-card').style.display='none';document.getElementById('loader').style.display='block';document.getElementById('similar-btn').disabled=true;
   try{const r=await apiFetch('/api/similar',{app:APP,subject:currentSub,imageBase64,imageType,extraText:document.getElementById('q-text').value.trim()});
     const lines=r.questions.split('\n').map(l=>l.trim()).filter(Boolean);let qs=[],cur='';
@@ -741,7 +741,7 @@ async function fetchDiagram() {
   document.getElementById('loader').style.display='none';document.getElementById('similar-btn').disabled=false;
 }
 
-function askTheoryFromSolve(){switchTab('theory');document.getElementById('theory-input').focus();}
+async function askTheoryFromSolve(){switchTab('theory');document.getElementById('theory-input').focus();}
 async function getTheory(){const topic=document.getElementById('theory-input').value.trim();if(!topic){alert('Please enter a topic.');return;}await fetchTheory(topic);}
 async function quickTheory(topic){document.getElementById('theory-input').value=topic;await fetchTheory(topic);}
 async function fetchTheory(topic){
