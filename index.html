@@ -18,7 +18,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;overflow-x:hidden;word-break:break-word;overflow-wrap:anywhere;}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(74,168,216,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(74,168,216,0.04) 1px,transparent 1px);background-size:48px 48px;}
 body::after{content:'';position:fixed;top:-180px;left:50%;transform:translateX(-50%);width:700px;height:400px;border-radius:50%;background:radial-gradient(ellipse,rgba(74,168,216,0.07) 0%,transparent 70%);pointer-events:none;z-index:0;}
 .gloss{height:2px;background:linear-gradient(90deg,transparent,#7cc8ee,#e0f4ff,#7cc8ee,transparent);}
@@ -208,7 +208,7 @@ textarea.q-text::placeholder{color:var(--muted);font-style:italic;}
 .motive-note.wrong{background:rgba(208,64,64,0.06);border:1px solid rgba(208,64,64,0.2);color:#802020;}
 .motive-note.partial{background:rgba(74,168,216,0.06);border:1px solid rgba(74,168,216,0.2);color:#1a5080;}
 .motive-sig{margin-top:8px;font-size:0.78rem;font-weight:600;font-style:normal;color:var(--bl1);font-family:'Syne',sans-serif;}
-.result-body{padding:18px 20px;font-size:0.9rem;line-height:1.95;font-family:'Lora',serif;color:var(--text);}
+.result-body{padding:18px 20px;font-size:0.9rem;line-height:1.95;font-family:'Lora',serif;color:var(--text);word-break:break-word;overflow-wrap:anywhere;}
 .result-body h3{font-family:'Syne',sans-serif;font-size:0.86rem;font-weight:700;color:var(--bl1);margin:14px 0 5px;}
 .math-line{display:block;background:rgba(74,168,216,0.06);border-left:2.5px solid var(--bl1);padding:7px 12px;margin:7px 0;border-radius:0 7px 7px 0;font-family:'JetBrains Mono',monospace;font-size:0.83rem;color:#1a5080;white-space:pre-wrap;}
 .diagram-wrap{margin:14px 0;background:rgba(74,168,216,0.03);border:1px solid var(--brd);border-radius:10px;padding:12px;overflow-x:auto;}
@@ -435,11 +435,14 @@ footer b{color:var(--bl1);}
       <button class="subj-btn"    data-sub="Chemistry" onclick="setSub(this,'c')">🧪 Chemistry</button>
     </div>
 
-    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('img-input').click()">
-      <input type="file" id="img-input" accept="image/*" onchange="handleImg(event)">
-      <span class="up-icon">📷</span>
-      <div class="up-title">Click to upload or drag & drop</div>
-      <div class="up-sub">Camera · Gallery · JPG · PNG · WEBP</div>
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="img-input" accept="image/*" capture="environment" onchange="handleImg(event)" style="display:none">
+      <input type="file" id="img-gallery" accept="image/*" onchange="handleImg(event)" style="display:none">
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button type="button" onclick="event.stopPropagation();document.getElementById('img-input').click()" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:1px solid rgba(74,168,216,0.5);background:rgba(74,168,216,0.12);color:#4aa8d8;font-size:0.95rem;cursor:pointer">📷 Camera</button>
+        <button type="button" onclick="event.stopPropagation();document.getElementById('img-gallery').click()" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:1px solid rgba(74,168,216,0.2);background:rgba(74,168,216,0.05);color:var(--text);font-size:0.95rem;cursor:pointer">🖼️ Gallery</button>
+      </div>
+      <div class="up-sub" style="margin-top:10px">or drag & drop · JPG · PNG · WEBP</div>
     </div>
     <div id="preview-wrap"><img id="preview-img" src="" alt=""><button class="rm-img" onclick="removeImg()">✕ Remove</button></div>
     <div class="or-row"><div class="or-line"></div><span>or type your question</span><div class="or-line"></div></div>
@@ -659,6 +662,9 @@ function showResult(text,mode,subject){
 }
 
 function formatText(raw){
+  raw=raw.replace(/\*\*\*(.+?)\*\*\*/g,'|||BI:$1|||');
+  raw=raw.replace(/\*\*(.+?)\*\*/g,'|||B:$1|||');
+  raw=raw.replace(/\*([^\n]+?)\*/g,'|||I:$1|||');
   const keywords={
     'Krebs Cycle':{formula:'Acetyl CoA + OAA → Citrate (6C)',def:'A series of chemical reactions in mitochondrial matrix that produces NADH, FADH₂ and ATP from Acetyl CoA.',exam:'NEET: 2-3 questions every year — product counts, location, enzymes'},
     'Meiosis':{formula:'',def:'Cell division that produces four genetically diverse haploid daughter cells from one diploid parent cell.',exam:'NEET: Crossing over, Prophase I stages, significance'},
