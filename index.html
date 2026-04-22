@@ -1,4 +1,15 @@
-<!DOCTYPE html>
+
+
+  <!-- HISTORY TAB -->
+  <div id="history-tab" style="display:none;padding:0 4px">
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+      <input id="history-search" type="text" placeholder="Search doubts..." oninput="searchHistory(this.value)" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--brd2);background:var(--card2);color:var(--text);font-size:0.9rem">
+      <select id="history-filter" onchange="loadHistory()" style="padding:10px;border-radius:10px;border:1px solid var(--brd2);background:var(--card2);color:var(--text);font-size:0.9rem"><option value="all">All</option><option value="full">Solutions</option><option value="hint">Hints</option><option value="verify">Verify</option><option value="theory">Theory</option></select>
+    </div>
+    <div id="history-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="history-empty" style="display:none;text-align:center;padding:40px 0;color:var(--muted)">No history yet</div>
+    <button id="history-load-more" onclick="loadMoreHistory()" style="display:none;width:100%;margin-top:12px;padding:12px;border-radius:10px;border:1px solid var(--brd2);background:var(--card2);color:var(--text);cursor:pointer">Load more</button>
+  </div><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -289,6 +300,9 @@ footer{position:relative;z-index:1;text-align:center;padding:16px;color:var(--mu
 footer b{color:var(--bl1);}
 
 @media(max-width:600px){header{padding:12px 14px;}#app-page{padding:20px 12px 60px;}.sec-title{font-size:1.2rem;}.mode-btn{min-width:calc(50% - 6px);font-size:0.66rem;}#user-phone{display:none;}}
+
+  #watermark{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden;opacity:0.045;display:flex;flex-wrap:wrap;align-content:flex-start;gap:0;}
+  .wm-text{font-size:13px;font-weight:600;color:#4aa8d8;transform:rotate(-35deg);white-space:nowrap;padding:28px 14px;letter-spacing:1px;font-family:'Syne',sans-serif;}
 </style>
 </head>
 <body>
@@ -419,10 +433,12 @@ footer b{color:var(--bl1);}
 </div>
 
 <!-- APP -->
-<div id="app-page" class="page">
+<div id="watermark"></div>
+  <div id="app-page" class="page">
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="switchTab('solver')">🔬 SOLVER</button>
     <button class="nav-tab" onclick="switchTab('theory')">📚 THEORY <span style="font-size:0.56rem;color:var(--cor);margin-left:3px">FREE</span></button>
+    <button class="nav-tab" onclick="switchTab('history')">📚 HISTORY</button>
   </div>
 
   <div id="solver-tab">
@@ -610,7 +626,8 @@ async function refreshStatus(){
     else{const l=Math.max(0,r.dailyLimit-r.dailyUsed);qd.textContent=`${l}/12 today`;qd.className='quota-pill paid'+(l<=2?' low':'');}
   }catch(e){token=null;userId=null;localStorage.clear();showPage('login-page');}
 }
-function switchTab(tab){document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='solver')||(i===1&&tab==='theory')));document.getElementById('solver-tab').style.display=tab==='solver'?'block':'none';document.getElementById('theory-tab').style.display=tab==='theory'?'block':'none';}
+function switchTab(tab){document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='solver')||(i===1&&tab==='theory')));document.getElementById('solver-tab').style.display=tab==='solver'?'block':'none';document.getElementById('theory-tab').style.display=tab==='theory'?'block':'none';
+  document.getElementById('history-tab').style.display=tab==='history'?'block':'none';}
 function setSub(el,cls){document.querySelectorAll('.subj-btn').forEach(b=>b.className='subj-btn');el.classList.add('a'+cls);currentSub=el.dataset.sub;}
 function setMode(mode){currentMode=mode;const map={hint:'mh',full:'mf',verify:'mv'};['hint','full','verify'].forEach(m=>{document.getElementById('btn-'+m).className='mode-btn'+(mode===m?' '+map[m]:'');});document.getElementById('verify-box').style.display=mode==='verify'?'block':'none';}
 function handleImg(e){if(e.target.files[0])loadImg(e.target.files[0]);}
@@ -632,6 +649,7 @@ async function solve(){
   try{
     const r=await apiFetch('/api/solve',{app:APP,subject:currentSub,mode:currentMode,imageBase64,imageType,extraText,studentAnswer,sessionId:null});
     sessionId=r.sessionId;followupCount=0;showResult(r.answer,currentMode,currentSub);await refreshStatus();
+    if (tab === 'history') loadHistory();
   }catch(err){
     if(err.code==='free_exhausted'||err.code==='daily_exhausted'){document.getElementById('sub-banner').style.display='block';document.getElementById('sub-banner').scrollIntoView({behavior:'smooth'});}
     else alert('Error: '+(err.message||'Something went wrong.'));
@@ -720,6 +738,7 @@ async function fetchDiagram() {
         body: JSON.stringify({ subject: currentSub, question: savedQ || '', solution: solution, sessionId: sessionId })
       });
       const d = await r.json();
+    if (d.phone) initWatermark(d.phone);
       if (d.svg && d.svg.length > 50) {
         container.innerHTML = d.svg;
         const svgEl = container.querySelector('svg');
@@ -761,6 +780,15 @@ async function subscribe(){try{const r=await apiFetch('/api/subscribe',{app:APP,
 
 async function apiFetch(path,body,auth=true,method='POST'){const headers={'Content-Type':'application/json'};if(auth&&token)headers['Authorization']='Bearer '+token;const opts={method,headers};if(method!=='GET'&&body)opts.body=JSON.stringify(body);const res=await fetch(API+path,opts);const data=await res.json();if(res.status===401){token=null;userId=null;localStorage.clear();showPage('login-page');throw new Error('Session expired');}if(!res.ok){const err=new Error(data.message||data.error||'Failed');err.code=data.error;throw err;}return data;}
 </script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js">
+  function initWatermark(phone){const wm=document.getElementById('watermark');if(!wm||!phone)return;const t=phone+' · ANISH.AI';let h='';for(let i=0;i<120;i++)h+='<span class="wm-text">'+t+'</span>';wm.innerHTML=h;}
+  let historyOffset=0,allHistorySessions=[];const HISTORY_LIMIT=15;
+  async function loadHistory(){historyOffset=0;allHistorySessions=[];document.getElementById('history-list').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Loading...</div>';await fetchHistory(false);}
+  async function fetchHistory(append){const search=document.getElementById('history-search')?.value||'';const filter=document.getElementById('history-filter')?.value||'all';let url=API+'/api/history?app=neet&limit='+HISTORY_LIMIT+'&offset='+historyOffset;if(search)url+='&search='+encodeURIComponent(search);try{const r=await apiFetch(url,{method:'GET'});const d=await r.json();const sessions=(d.sessions||[]).filter(s=>filter==='all'||s.mode===filter);if(!append)allHistorySessions=sessions;else allHistorySessions=allHistorySessions.concat(sessions);renderHistory(allHistorySessions);document.getElementById('history-load-more').style.display=sessions.length===HISTORY_LIMIT?'block':'none';}catch(e){document.getElementById('history-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--err)">Failed to load history</div>';}}
+  function renderHistory(sessions){const list=document.getElementById('history-list');const empty=document.getElementById('history-empty');if(!sessions.length){list.innerHTML='';empty.style.display='block';return;}empty.style.display='none';list.innerHTML=sessions.map(s=>{const date=new Date(s.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});const modeColor={full:'#4aa8d8',hint:'var(--hint)',verify:'var(--verify)',theory:'var(--theory)'}[s.mode]||'var(--muted)';const modeLabel={full:'Full Solution',hint:'Hint',verify:'Verify',theory:'Theory'}[s.mode]||s.mode;const thumb=s.question_image_url?'<img src="'+s.question_image_url+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">':'<div style="width:60px;height:60px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">📝</div>';return'<div onclick="reopenSession(''+s.id+'',''+(s.subject||'')+'',''+(s.mode||'')+'')" style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:12px;cursor:pointer">'+thumb+'<div style="flex:1;min-width:0"><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span style="font-size:0.72rem;font-weight:700;color:'+modeColor+';text-transform:uppercase">'+modeLabel+'</span><span style="font-size:0.72rem;color:var(--muted)">'+(s.subject||'')+' · '+date+'</span></div><div style="font-size:0.85rem;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+(s.question_summary||'Question')+'</div>'+(s.followup_count?'<div style="font-size:0.72rem;color:var(--muted);margin-top:4px">💬 '+s.followup_count+' follow-ups</div>':'')+'</div></div>';}).join('');}
+  function searchHistory(val){clearTimeout(window._histSearch);window._histSearch=setTimeout(()=>{historyOffset=0;fetchHistory(false);},400);}
+  function loadMoreHistory(){historyOffset+=HISTORY_LIMIT;fetchHistory(true);}
+  async function reopenSession(sessId,subject,mode){switchTab('solver');sessionId=sessId;currentSub=subject;const hist=allHistorySessions.find(s=>s.id===sessId);if(hist&&hist.solution){document.getElementById('result-card').style.display='block';document.getElementById('result-body').innerHTML=formatText(hist.solution);document.getElementById('post-actions').style.display='flex';document.getElementById('followup-section').style.display='block';document.getElementById('fu-count').textContent='('+(hist.followup_count||0)+'/3 used)';if(window.renderMathInElement)renderMathInElement(document.getElementById('result-body'),{throwOnError:false});}}
+</script>
 </body>
 </html>
