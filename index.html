@@ -18,8 +18,25 @@
   --bl1:#4aa8d8;--bl2:#7cc8ee;--bl3:#b0dff5;
   --gls:rgba(74,168,216,0.06);--text:#1a2a3a;--muted:#4a7090;
   --hint:#e8820a;--verify:#8040c0;--cor:#20a060;--err:#d04040;--theory:#4060d0;
-  --dm-toggle-bg:rgba(74,168,216,0.12);
 }
+body.dark-mode{
+  --bg:#06101a;--card:#0c1c2c;--card2:#102030;
+  --brd:rgba(74,168,216,0.15);--brd2:rgba(74,168,216,0.28);--brd3:rgba(74,168,216,0.50);
+  --bl1:#4aa8d8;--bl2:#7cc8ee;--bl3:#b0dff5;
+  --gls:rgba(74,168,216,0.08);--text:#d0e8f8;--muted:#4a7090;
+  --hint:#f0a030;--verify:#a060e0;--cor:#40c080;--err:#f06060;--theory:#80a8f8;
+}
+*,body,div,span,button,input,select,textarea{
+  transition:background-color 0.45s cubic-bezier(.4,0,.2,1),color 0.45s cubic-bezier(.4,0,.2,1),border-color 0.35s ease,box-shadow 0.35s ease !important;
+}
+#dm-toggle{position:fixed;bottom:22px;right:18px;z-index:9999;width:48px;height:48px;border-radius:50%;border:1px solid var(--brd2);cursor:pointer;background:rgba(74,168,216,0.1);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 20px rgba(74,168,216,0.2);}
+#dm-toggle:hover{transform:scale(1.12);}
+#dm-toggle .s{display:block;}
+#dm-toggle .m{display:none;}
+body.dark-mode #dm-toggle .s{display:none;}
+body.dark-mode #dm-toggle .m{display:block;}
+.ai-disclaimer{margin-top:12px;padding:9px 12px;border-radius:8px;background:var(--gls);border:1px solid var(--brd);font-size:0.71rem;color:var(--muted);line-height:1.5;opacity:0.72;}
+.asphyc-footer{text-align:center;padding:16px 0 8px;font-size:0.67rem;color:var(--muted);opacity:0.4;letter-spacing:0.5px;}
 /* ── DARK MODE ── */
 body.dark-mode{
   --bg:#06101a;--card:#0c1c2c;--card2:#102030;
@@ -613,6 +630,9 @@ footer b{color:var(--bl1);}
 </div>
 
 <footer>Designed by <b>ANISH</b> · Anish Physics Lab · NEET Solver</footer>
+
+  <button id="dm-toggle" onclick="toggleDM()" title="Toggle theme"><span class="s">☀️</span><span class="m">🌙</span></button>
+  <div class="asphyc-footer">Made with ❤️ by Team ASPHYC</div>
 
 <script>
 const API='https://anish-ai-theta.vercel.app'; // ← REPLACE WITH YOUR VERCEL URL
