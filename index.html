@@ -1,7 +1,4 @@
-  html=html.replace(/\|\|\|BI:([\s\S]+?)\|\|\|/g,'<strong><em>$1</em></strong>');
-  html=html.replace(/\|\|\|B:([\s\S]+?)\|\|\|/g,'<strong>$1</strong>');
-  html=html.replace(/\|\|\|I:([\s\S]+?)\|\|\|/g,'<em>$1</em>');
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -631,8 +628,6 @@ footer b{color:var(--bl1);}
 
 <footer>Designed by <b>ANISH</b> · Anish Physics Lab · NEET Solver</footer>
 
-  <button id="dm-toggle" onclick="toggleDM()" title="Toggle theme"><span class="s">☀️</span><span class="m">🌙</span></button>
-  <div class="asphyc-footer">Made with ❤️ by Team ASPHYC</div>
 
 <script>
 const API='https://anish-ai-theta.vercel.app'; // ← REPLACE WITH YOUR VERCEL URL
@@ -765,6 +760,9 @@ function formatText(raw){
       html+=`<span>${processed}</span>\n`;
     }
   }
+    html=html.replace(/\|\|\|BI:([\s\S]+?)\|\|\|/g,'<strong><em>$1</em></strong>');
+  html=html.replace(/\|\|\|B:([\s\S]+?)\|\|\|/g,'<strong>$1</strong>');
+  html=html.replace(/\|\|\|I:([\s\S]+?)\|\|\|/g,'<em>$1</em>');
   return html;
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -851,5 +849,6 @@ async function apiFetch(path,body,auth=true,method='POST'){const headers={'Conte
   }
   if (localStorage.getItem('neet-theme') === 'dark') document.body.classList.add('dark-mode');
 </script>
+  <button id="dm-toggle" onclick="toggleDM()" title="Toggle theme"><span class="s">☀️</span><span class="m">🌙</span></button>
 </body>
 </html>
